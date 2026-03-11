@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Components - Hero Banner Format</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+            color: #1a1a1a;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        
+        .content-type-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .type-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .type-btn:hover {
+            border-color: #4a90e2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .type-btn.active {
+            background: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+        
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+        
+        @media (max-width: 1200px) {
+            .visualization {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .arrow {
+                display: none;
+            }
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .post-type {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .post-type-name {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+        
+        .metadata-field {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        
+        .field-name {
+            font-family: 'Courier New', monospace;
+            background: #e8eef7;
+            color: #2d5aa8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 140px;
+            font-weight: 600;
+        }
+        
+        .field-value {
+            margin-left: 12px;
+            color: #555;
+            flex: 1;
+        }
+        
+        .schema-badge {
+            display: inline-block;
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            margin-left: 8px;
+            font-weight: 600;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .arrow {
+            font-size: 40px;
+            color: #4a90e2;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .component {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .component-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .component-slot {
+            background: rgba(255,255,255,0.15);
+            border: 2px dashed rgba(255,255,255,0.4);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .slot-label {
+            opacity: 0.8;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        
+        .schema-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .schema-key {
+            color: #9cdcfe;
+        }
+        
+        .schema-value {
+            color: #ce9178;
+        }
+        
+        .schema-type {
+            color: #4ec9b0;
+        }
+        
+        .schema-section-label {
+            background: #fff3cd;
+            color: #856404;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+        
+        /* Hero Banner Specific Styles */
+        .rendered-output {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hero-banner {
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            padding: 60px;
+            background-size: cover;
+            background-position: center;
+            color: white;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            opacity: 0.95;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero-meta {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .hero-cta {
+            display: inline-block;
+            background: white;
+            color: #333;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+        
+        .key-insight {
+            background: #f0f7ff;
+            border-left: 4px solid #4a90e2;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 8px;
+        }
+        
+        .key-insight h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        
+        .key-insight ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connected Components: Hero Banner Format</h1>
+        <p class="subtitle">Same Metadata → Different Component → Completely Different Presentation</p>
+        
+        <div class="content-type-selector">
+            <button class="type-btn active" data-type="testimonial">Testimonial</button>
+            <button class="type-btn" data-type="faq">FAQ</button>
+            <button class="type-btn" data-type="person">People</button>
+            <button class="type-btn" data-type="product">Products</button>
+            <button class="type-btn" data-type="research">Research Centers</button>
+            <button class="type-btn" data-type="event">Events</button>
+            <button class="type-btn" data-type="organization">Organizations</button>
+            <button class="type-btn" data-type="book">Books</button>
+            <button class="type-btn" data-type="article">Articles</button>
+        </div>
+        
+        <div class="visualization">
+            <!-- Custom Post Type -->
+            <div class="section">
+                <div class="section-title">1. Custom Post Type + Metadata</div>
+                <div id="post-type-container"></div>
+            </div>
+            
+            <!-- Arrow -->
+            <div class="arrow">→</div>
+            
+            <!-- Universal Component -->
+            <div class="section">
+                <div class="section-title">2. Universal Component (Hero Format)</div>
+                <div class="component">
+                    <div class="component-title">🎨 Hero Banner Component</div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 1: Hero Title</div>
+                        <div id="slot-1"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 2: Hero Subtitle</div>
+                        <div id="slot-2"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 3: Hero Meta / Context</div>
+                        <div id="slot-3"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 4: CTA Button</div>
+                        <div id="slot-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rendered Output -->
+        <div class="section">
+            <div class="section-title">3. Rendered Hero Banner</div>
+            <div id="rendered-output" class="rendered-output"></div>
+        </div>
+        
+        <!-- Key Insights -->
+        <div class="key-insight">
+            <h3>🎯 Same Metadata, Different Component, Infinite Possibilities</h3>
+            <ul>
+                <li><strong>Same Data Source:</strong> Identical metadata fields as the card component example</li>
+                <li><strong>Different Template:</strong> Hero banner layout instead of card layout</li>
+                <li><strong>Same Slots:</strong> Still using the universal 4-slot pattern</li>
+                <li><strong>Different Mapping:</strong> Metadata mapped differently for hero context (title becomes hero headline, subtitle becomes supporting text)</li>
+                <li><strong>Infinite Variations:</strong> Could also be: compact banner, video hero, split hero, carousel hero, etc.</li>
+                <li><strong>Zero Duplicate Code:</strong> One metadata structure → many component presentations</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const contentTypes = {
+            testimonial: {
+                postType: 'Testimonial',
+                metadata: {
+                    'testimonial_short': 'Tremendous program. The best business school—and believe me, I\'ve seen them all...',
+                    'person_name': 'Ronald Dump',
+                    'person_title': 'CEO & Chief Expert',
+                    'person_company': 'Dump Global Enterprises',
+                    'related_program': 'IMD MBA Alumni',
+                    'primary_cta': 'Read full story'
+                },
+                schemaMapping: {
+                    'testimonial_short': 'reviewBody',
+                    'person_name': 'author.name',
+                    'person_title': 'author.jobTitle',
+                    'person_company': 'author.worksFor',
+                    'related_program': 'itemReviewed.name',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{person_name}',
+                    slot2: '{testimonial_short}',
+                    slot3: '{person_title}, {person_company} • {related_program}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">TESTIMONIAL</div>
+                            <div class="hero-title">"Tremendous program. The best business school I've experienced."</div>
+                            <div class="hero-subtitle">
+                                Believe me, I've seen them all. IMD taught me things I already knew, but they said it in French, which was very classy.
+                            </div>
+                            <div class="hero-meta">
+                                <strong>Ronald Dump</strong>, CEO & Chief Expert, Dump Global Enterprises<br>
+                                IMD MBA Alumni
+                            </div>
+                            <a href="#" class="hero-cta">Read full story →</a>
+                        </div>
+                    </div>
+                `
+            },
+            faq: {
+                postType: 'FAQ',
+                metadata: {
+                    'faq_question': 'How long does the Executive MBA program take?',
+                    'faq_answer': 'The Executive MBA is completed over 18 months with modular format...',
+                    'related_program': 'Executive MBA',
+                    'category': 'Program Structure',
+                    'primary_cta': 'View full program details'
+                },
+                schemaMapping: {
+                    'faq_question': 'mainEntity.name',
+                    'faq_answer': 'mainEntity.acceptedAnswer',
+                    'related_program': 'about.name',
+                    'category': 'about.category',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{faq_question}',
+                    slot2: '{faq_answer}',
+                    slot3: '{related_program} • {category}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">FREQUENTLY ASKED</div>
+                            <div class="hero-title">How long does the Executive MBA program take?</div>
+                            <div class="hero-subtitle">
+                                The Executive MBA is completed over 18 months with modular format, allowing you to balance your career while earning your degree. The program includes six one-week modules at our Lausanne campus and a two-week international module.
+                            </div>
+                            <div class="hero-meta">
+                                Executive MBA • Program Structure
+                            </div>
+                            <a href="#" class="hero-cta">View full program details →</a>
+                        </div>
+                    </div>
+                `
+            },
+            person: {
+                postType: 'Person',
+                metadata: {
+                    'person_name': 'Dr. Sarah Chen',
+                    'person_title': 'Professor of Strategy & Innovation',
+                    'person_bio': 'Leading expert in digital transformation with 15+ years research...',
+                    'person_department': 'Strategy & Innovation',
+                    'person_email': 's.chen@imd.org',
+                    'primary_cta': 'View faculty profile'
+                },
+                schemaMapping: {
+                    'person_name': 'name',
+                    'person_title': 'jobTitle',
+                    'person_bio': 'description',
+                    'person_department': 'worksFor.department',
+                    'person_email': 'email',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{person_name}',
+                    slot2: '{person_title}',
+                    slot3: '{person_department} • {person_email}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">FACULTY SPOTLIGHT</div>
+                            <div class="hero-title">Dr. Sarah Chen</div>
+                            <div class="hero-subtitle">
+                                Professor of Strategy & Innovation
+                            </div>
+                            <div class="hero-subtitle" style="font-size: 18px; margin-top: 15px;">
+                                Leading expert in digital transformation with 15+ years research experience in emerging markets and technology adoption patterns. Author of 23 published articles on AI strategy and organizational change.
+                            </div>
+                            <div class="hero-meta">
+                                Strategy & Innovation • s.chen@imd.org
+                            </div>
+                            <a href="#" class="hero-cta">View faculty profile →</a>
+                        </div>
+                    </div>
+                `
+            },
+            product: {
+                postType: 'Product (Program)',
+                metadata: {
+                    'program_name': 'Leading Digital Business Transformation',
+                    'program_short_desc': 'Master the strategies and frameworks to lead successful digital initiatives...',
+                    'program_duration': '5 days',
+                    'program_format': 'In-person',
+                    'program_level': 'Senior Executive',
+                    'primary_cta': 'Download brochure'
+                },
+                schemaMapping: {
+                    'program_name': 'name',
+                    'program_short_desc': 'description',
+                    'program_duration': 'timeRequired',
+                    'program_format': 'courseMode',
+                    'program_level': 'audience.audienceType',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{program_name}',
+                    slot2: '{program_short_desc}',
+                    slot3: '{program_duration} • {program_format} • {program_level}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">EXECUTIVE PROGRAM</div>
+                            <div class="hero-title">Leading Digital Business Transformation</div>
+                            <div class="hero-subtitle">
+                                Master the strategies and frameworks to lead successful digital initiatives across your organization. Learn how to navigate technological disruption, build digital capabilities, and create sustainable competitive advantage in the digital economy.
+                            </div>
+                            <div class="hero-meta">
+                                5 days • In-person • Senior Executive
+                            </div>
+                            <a href="#" class="hero-cta">Download brochure →</a>
+                        </div>
+                    </div>
+                `
+            },
+            research: {
+                postType: 'Research Center',
+                metadata: {
+                    'center_name': 'Global Center for Digital Business Transformation',
+                    'center_description': 'Pioneering research on digital disruption and organizational adaptation...',
+                    'center_focus': 'Digital Strategy, AI & Analytics, Platform Economics',
+                    'center_director': 'Prof. Michael Wade',
+                    'primary_cta': 'Explore our research'
+                },
+                schemaMapping: {
+                    'center_name': 'name',
+                    'center_description': 'description',
+                    'center_focus': 'knowsAbout',
+                    'center_director': 'employee.name',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{center_name}',
+                    slot2: '{center_description}',
+                    slot3: '{center_focus} • Led by {center_director}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">RESEARCH CENTER</div>
+                            <div class="hero-title">Global Center for Digital Business Transformation</div>
+                            <div class="hero-subtitle">
+                                Pioneering research on digital disruption and organizational adaptation in the age of exponential technologies. We help executives understand and navigate the complex challenges of digital transformation.
+                            </div>
+                            <div class="hero-meta">
+                                Focus Areas: Digital Strategy, AI & Analytics, Platform Economics<br>
+                                Led by <strong>Prof. Michael Wade</strong>
+                            </div>
+                            <a href="#" class="hero-cta">Explore our research →</a>
+                        </div>
+                    </div>
+                `
+            },
+            event: {
+                postType: 'Event',
+                metadata: {
+                    'event_name': 'AI & Strategy Summit 2026',
+                    'event_date': '2026-05-15',
+                    'event_location': 'IMD Lausanne Campus',
+                    'event_description': 'Join leading executives and AI experts to explore strategic applications...',
+                    'event_type': 'Conference',
+                    'event_speakers': 'Prof. Sarah Chen, Dr. Michael Wade',
+                    'primary_cta': 'Register now'
+                },
+                schemaMapping: {
+                    'event_name': 'name',
+                    'event_date': 'startDate',
+                    'event_location': 'location.name',
+                    'event_description': 'description',
+                    'event_type': 'eventAttendanceMode',
+                    'event_speakers': 'performer.name',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{event_name}',
+                    slot2: '{event_description}',
+                    slot3: '{event_date} • {event_location} • {event_speakers}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">UPCOMING EVENT</div>
+                            <div class="hero-title">AI & Strategy Summit 2026</div>
+                            <div class="hero-subtitle">
+                                Join leading executives and AI experts to explore strategic applications of artificial intelligence in business transformation. Learn frameworks for responsible AI adoption and competitive advantage.
+                            </div>
+                            <div class="hero-meta">
+                                📅 May 15, 2026 • 📍 IMD Lausanne Campus<br>
+                                🎤 Featured Speakers: Prof. Sarah Chen, Dr. Michael Wade
+                            </div>
+                            <a href="#" class="hero-cta">Register now →</a>
+                        </div>
+                    </div>
+                `
+            },
+            organization: {
+                postType: 'Organization / Company',
+                metadata: {
+                    'org_name': 'Nestlé S.A.',
+                    'org_description': 'Global leader in nutrition, health and wellness with brands across 190 countries...',
+                    'org_industry': 'Food & Beverage',
+                    'partnership_type': 'Corporate Partner',
+                    'org_headquarters': 'Vevey, Switzerland',
+                    'primary_cta': 'View partnership'
+                },
+                schemaMapping: {
+                    'org_name': 'name',
+                    'org_description': 'description',
+                    'org_industry': 'industry',
+                    'partnership_type': 'memberOf',
+                    'org_headquarters': 'address.addressLocality',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{org_name}',
+                    slot2: '{org_description}',
+                    slot3: '{org_industry} • {org_headquarters} • {partnership_type}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #434343 0%, #000000 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">CORPORATE PARTNER</div>
+                            <div class="hero-title">Nestlé S.A.</div>
+                            <div class="hero-subtitle">
+                                Global leader in nutrition, health and wellness with brands across 190 countries. Pioneering sustainable food systems and digital transformation in the consumer goods sector.
+                            </div>
+                            <div class="hero-meta">
+                                Food & Beverage • Vevey, Switzerland • Corporate Partner Since 2018
+                            </div>
+                            <a href="#" class="hero-cta">View partnership →</a>
+                        </div>
+                    </div>
+                `
+            },
+            book: {
+                postType: 'Book',
+                metadata: {
+                    'book_title': 'Orchestrating Transformation: How to Deliver Winning Performance',
+                    'book_author': 'Prof. Michael Wade, Dr. Sarah Chen',
+                    'book_description': 'A practical framework for leading successful digital transformation initiatives...',
+                    'publication_date': '2025-09-15',
+                    'publisher': 'IMD Publishing',
+                    'isbn': '978-1-234-56789-0',
+                    'primary_cta': 'Order now'
+                },
+                schemaMapping: {
+                    'book_title': 'name',
+                    'book_author': 'author.name',
+                    'book_description': 'description',
+                    'publication_date': 'datePublished',
+                    'publisher': 'publisher.name',
+                    'isbn': 'isbn',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{book_title}',
+                    slot2: '{book_description}',
+                    slot3: 'by {book_author} • {publisher} • {publication_date}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">NEW RELEASE</div>
+                            <div class="hero-title">Orchestrating Transformation</div>
+                            <div class="hero-subtitle" style="font-size: 24px; margin-bottom: 20px;">
+                                How to Deliver Winning Performance
+                            </div>
+                            <div class="hero-subtitle" style="font-size: 18px;">
+                                A practical framework for leading successful digital transformation initiatives. Based on research with 1,000+ executives across global industries, this book provides actionable strategies for navigating organizational change.
+                            </div>
+                            <div class="hero-meta">
+                                by <strong>Prof. Michael Wade, Dr. Sarah Chen</strong><br>
+                                IMD Publishing • September 2025
+                            </div>
+                            <a href="#" class="hero-cta">Order now →</a>
+                        </div>
+                    </div>
+                `
+            },
+            article: {
+                postType: 'Article',
+                metadata: {
+                    'article_title': 'The Future of Leadership in the Age of AI',
+                    'article_author': 'Prof. Sarah Chen',
+                    'article_excerpt': 'As artificial intelligence reshapes business landscapes, leaders must evolve...',
+                    'publication_date': '2026-02-01',
+                    'article_category': 'Digital Transformation',
+                    'reading_time': '8 min read',
+                    'primary_cta': 'Read article'
+                },
+                schemaMapping: {
+                    'article_title': 'headline',
+                    'article_author': 'author.name',
+                    'article_excerpt': 'description',
+                    'publication_date': 'datePublished',
+                    'article_category': 'articleSection',
+                    'reading_time': 'timeRequired',
+                    'primary_cta': 'url'
+                },
+                componentMapping: {
+                    slot1: '{article_title}',
+                    slot2: '{article_excerpt}',
+                    slot3: 'by {article_author} • {article_category} • {reading_time}',
+                    slot4: '{primary_cta}'
+                },
+                renderedHTML: `
+                    <div class="hero-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <div class="hero-badge">THOUGHT LEADERSHIP</div>
+                            <div class="hero-title">The Future of Leadership in the Age of AI</div>
+                            <div class="hero-subtitle">
+                                As artificial intelligence reshapes business landscapes, leaders must evolve beyond traditional management paradigms. This article explores five critical competencies that will define successful leadership in an AI-augmented world.
+                            </div>
+                            <div class="hero-meta">
+                                by <strong>Prof. Sarah Chen</strong> • Digital Transformation • 8 min read<br>
+                                Published February 1, 2026
+                            </div>
+                            <a href="#" class="hero-cta">Read article →</a>
+                        </div>
+                    </div>
+                `
+            }
+        };
+        
+        function renderContentType(type) {
+            const data = contentTypes[type];
+            
+            // Render Post Type with Schema Mapping
+            const postTypeHTML = `
+                <div class="post-type">
+                    <div class="post-type-name">${data.postType}</div>
+                    ${Object.entries(data.metadata).map(([key, value]) => `
+                        <div class="metadata-field">
+                            <div class="field-name">${key}</div>
+                            <div class="field-value">
+                                ${value.length > 60 ? value.substring(0, 60) + '...' : value}
+                                ${data.schemaMapping && data.schemaMapping[key] ? 
+                                    `<span class="schema-badge">${data.schemaMapping[key]}</span>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('post-type-container').innerHTML = postTypeHTML;
+            
+            // Render Component Slots
+            document.getElementById('slot-1').textContent = data.componentMapping.slot1;
+            document.getElementById('slot-2').textContent = data.componentMapping.slot2;
+            document.getElementById('slot-3').textContent = data.componentMapping.slot3;
+            document.getElementById('slot-4').textContent = data.componentMapping.slot4;
+            
+            // Render Output
+            document.getElementById('rendered-output').innerHTML = data.renderedHTML;
+        }
+        
+        // Button handlers
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderContentType(btn.dataset.type);
+            });
+        });
+        
+        // Initial render
+        renderContentType('testimonial');
+    </script>
+</body>
+</html>

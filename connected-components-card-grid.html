@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Components - Card Grid Format</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+            color: #1a1a1a;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        
+        .content-type-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .type-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .type-btn:hover {
+            border-color: #0066cc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .type-btn.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+        
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+        
+        @media (max-width: 1200px) {
+            .visualization {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .arrow {
+                display: none;
+            }
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .post-type {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        .post-type-name {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+        
+        .metadata-field {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        
+        .field-name {
+            font-family: 'Courier New', monospace;
+            background: #e8eef7;
+            color: #0066cc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 140px;
+            font-weight: 600;
+        }
+        
+        .field-value {
+            margin-left: 12px;
+            color: #555;
+            flex: 1;
+        }
+        
+        .schema-badge {
+            display: inline-block;
+            background: #fff3cd;
+            color: #856404;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            margin-left: 8px;
+            font-weight: 600;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .arrow {
+            font-size: 40px;
+            color: #0066cc;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .component {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .component-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .component-slot {
+            background: rgba(255,255,255,0.15);
+            border: 2px dashed rgba(255,255,255,0.4);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .slot-label {
+            opacity: 0.8;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        
+        /* Card Grid Specific Styles */
+        .rendered-output {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-content {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            color: #1a1a1a;
+        }
+        
+        .card-description {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+        
+        .card-footer {
+            padding-top: 16px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .card-cta {
+            color: #0066cc;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: gap 0.3s ease;
+        }
+        
+        .card-cta:hover {
+            gap: 12px;
+        }
+        
+        .card-cta::after {
+            content: '→';
+            font-size: 16px;
+        }
+        
+        .key-insight {
+            background: #f0f7ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 8px;
+        }
+        
+        .key-insight h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        
+        .key-insight ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .comparison-note {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .comparison-note strong {
+            color: #856404;
+            font-size: 18px;
+        }
+        
+        .comparison-note p {
+            margin-top: 10px;
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connected Components: Card Grid Format</h1>
+        <p class="subtitle">Same Metadata → Different Component → IMD-Style Card Layout</p>
+        
+        <div class="comparison-note">
+            <strong>🎯 Third Presentation Format</strong>
+            <p>Same exact metadata as Card Component and Hero Banner - now rendered as a professional card grid matching IMD's design system</p>
+        </div>
+        
+        <div class="content-type-selector">
+            <button class="type-btn active" data-type="testimonial">Testimonial</button>
+            <button class="type-btn" data-type="faq">FAQ</button>
+            <button class="type-btn" data-type="person">People</button>
+            <button class="type-btn" data-type="product">Products</button>
+            <button class="type-btn" data-type="research">Research Centers</button>
+            <button class="type-btn" data-type="event">Events</button>
+            <button class="type-btn" data-type="organization">Organizations</button>
+            <button class="type-btn" data-type="book">Books</button>
+            <button class="type-btn" data-type="article">Articles</button>
+        </div>
+        
+        <div class="visualization">
+            <!-- Custom Post Type -->
+            <div class="section">
+                <div class="section-title">1. Custom Post Type + Metadata</div>
+                <div id="post-type-container"></div>
+            </div>
+            
+            <!-- Arrow -->
+            <div class="arrow">→</div>
+            
+            <!-- Universal Component -->
+            <div class="section">
+                <div class="section-title">2. Universal Component (Card Grid)</div>
+                <div class="component">
+                    <div class="component-title">🎨 Card Component</div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 1: Card Title</div>
+                        <div id="slot-1"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 2: Card Description</div>
+                        <div id="slot-2"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 3: Card Meta / Context</div>
+                        <div id="slot-3"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 4: CTA Link</div>
+                        <div id="slot-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rendered Output -->
+        <div class="section">
+            <div class="section-title">3. Rendered Card Grid (Click any card for example)</div>
+            <div class="rendered-output">
+                <div id="cards-container" class="cards-grid"></div>
+            </div>
+        </div>
+        
+        <!-- Key Insights -->
+        <div class="key-insight">
+            <h3>🎯 Three Formats, One Data Source</h3>
+            <ul>
+                <li><strong>Format 1 - Simple Card:</strong> Compact list display with basic info</li>
+                <li><strong>Format 2 - Hero Banner:</strong> Full-width dramatic presentation</li>
+                <li><strong>Format 3 - Card Grid (This):</strong> IMD-style professional card layout</li>
+                <li><strong>Same Metadata:</strong> All three use identical CPT fields</li>
+                <li><strong>Same Slots:</strong> All three use the universal 4-slot pattern</li>
+                <li><strong>Different CSS:</strong> Visual differences achieved through styling only</li>
+                <li><strong>Update Once:</strong> Change metadata → all three formats update automatically</li>
+                <li><strong>Infinite Possibilities:</strong> Could also create: timeline, list, table, carousel, masonry, etc.</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const contentTypes = {
+            testimonial: {
+                postType: 'Testimonial',
+                metadata: {
+                    'testimonial_short': 'Tremendous program. The best business school—and believe me, I\'ve seen them all...',
+                    'person_name': 'Ronald Dump',
+                    'person_title': 'CEO & Chief Expert',
+                    'person_company': 'Dump Global Enterprises',
+                    'related_program': 'IMD MBA Alumni',
+                    'primary_cta': 'Read full story'
+                },
+                componentMapping: {
+                    slot1: '{person_name}',
+                    slot2: '{testimonial_short}',
+                    slot3: '{person_title}, {person_company}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: '"Tremendous program"',
+                        description: 'The best business school—and believe me, I\'ve seen them all. IMD taught me things I already knew, but they said it in French, which was very classy.',
+                        meta: 'Ronald Dump, CEO & Chief Expert at Dump Global Enterprises',
+                        cta: 'Read full story',
+                        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    },
+                    {
+                        title: '"Transformative experience"',
+                        description: 'The Executive MBA challenged my thinking and gave me frameworks I use daily. The global network alone is worth the investment.',
+                        meta: 'Sarah Chen, CFO at TechVentures Inc.',
+                        cta: 'Read full story',
+                        gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                    },
+                    {
+                        title: '"World-class faculty"',
+                        description: 'The quality of teaching and real-world case studies exceeded all expectations. This program accelerated my career trajectory significantly.',
+                        meta: 'Michael Rodriguez, VP Strategy at Global Systems',
+                        cta: 'Read full story',
+                        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    },
+                    {
+                        title: '"Exceptional ROI"',
+                        description: 'Within six months of graduation, I was promoted to C-suite. The skills and insights from IMD were immediately applicable and impactful.',
+                        meta: 'Lisa Wang, Chief Innovation Officer at NexGen Corp',
+                        cta: 'Read full story',
+                        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    }
+                ]
+            },
+            faq: {
+                postType: 'FAQ',
+                metadata: {
+                    'faq_question': 'How long does the Executive MBA program take?',
+                    'faq_answer': 'The Executive MBA is completed over 18 months with modular format...',
+                    'related_program': 'Executive MBA',
+                    'category': 'Program Structure',
+                    'primary_cta': 'View full program details'
+                },
+                componentMapping: {
+                    slot1: '{faq_question}',
+                    slot2: '{faq_answer}',
+                    slot3: '{related_program} • {category}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'How long does the Executive MBA take?',
+                        description: 'The Executive MBA is completed over 18 months with modular format, allowing you to balance your career while earning your degree.',
+                        meta: 'Executive MBA • Program Structure',
+                        cta: 'View full program details',
+                        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    },
+                    {
+                        title: 'What is the class profile?',
+                        description: 'Our participants average 12+ years work experience, represent 30+ countries, and hold senior management positions across industries.',
+                        meta: 'Executive MBA • Admissions',
+                        cta: 'View full program details',
+                        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                    },
+                    {
+                        title: 'Can I study while working full-time?',
+                        description: 'Yes! The modular format is designed for working executives. Classes meet for one week every 6-8 weeks, plus online components.',
+                        meta: 'Executive MBA • Format',
+                        cta: 'View full program details',
+                        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    }
+                ]
+            },
+            person: {
+                postType: 'Person',
+                metadata: {
+                    'person_name': 'Dr. Sarah Chen',
+                    'person_title': 'Professor of Strategy & Innovation',
+                    'person_bio': 'Leading expert in digital transformation with 15+ years research...',
+                    'person_department': 'Strategy & Innovation',
+                    'primary_cta': 'View faculty profile'
+                },
+                componentMapping: {
+                    slot1: '{person_name}',
+                    slot2: '{person_bio}',
+                    slot3: '{person_title} • {person_department}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'Dr. Sarah Chen',
+                        description: 'Leading expert in digital transformation with 15+ years research experience in emerging markets and technology adoption patterns.',
+                        meta: 'Professor of Strategy & Innovation',
+                        cta: 'View faculty profile',
+                        gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+                    },
+                    {
+                        title: 'Prof. Michael Wade',
+                        description: 'Director of the Global Center for Digital Business Transformation. Author of multiple books on digital strategy and organizational change.',
+                        meta: 'Professor of Innovation & Strategy',
+                        cta: 'View faculty profile',
+                        gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+                    },
+                    {
+                        title: 'Dr. James Lee',
+                        description: 'Specializes in AI applications in business, machine learning strategy, and data-driven decision making for executives.',
+                        meta: 'Professor of Technology & Operations',
+                        cta: 'View faculty profile',
+                        gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+                    },
+                    {
+                        title: 'Prof. Maria Santos',
+                        description: 'Expert in sustainable business models, circular economy, and ESG strategy. Regular advisor to Fortune 500 companies.',
+                        meta: 'Professor of Sustainability & Leadership',
+                        cta: 'View faculty profile',
+                        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                    }
+                ]
+            },
+            product: {
+                postType: 'Product (Program)',
+                metadata: {
+                    'program_name': 'Leading Digital Business Transformation',
+                    'program_short_desc': 'Master the strategies and frameworks to lead successful digital initiatives...',
+                    'program_duration': '5 days',
+                    'program_format': 'In-person',
+                    'program_level': 'Senior Executive',
+                    'primary_cta': 'Download brochure'
+                },
+                componentMapping: {
+                    slot1: '{program_name}',
+                    slot2: '{program_short_desc}',
+                    slot3: '{program_duration} • {program_format}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'Leading Digital Business Transformation',
+                        description: 'Master the strategies and frameworks to lead successful digital initiatives across your organization. Navigate disruption and build competitive advantage.',
+                        meta: '5 days • In-person • Senior Executive',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    },
+                    {
+                        title: 'Executive MBA',
+                        description: 'Designed for experienced leaders, this 18-month modular program combines world-class education with practical leadership development.',
+                        meta: '18 months • Hybrid • Executive Level',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    },
+                    {
+                        title: 'AI & Analytics for Leaders',
+                        description: 'Learn to leverage AI and data analytics for strategic decision-making. No technical background required—focus on leadership implications.',
+                        meta: '3 days • Online • Senior Manager+',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    },
+                    {
+                        title: 'Orchestrating Winning Performance',
+                        description: 'Transform your organization\'s performance through strategic alignment, operational excellence, and leadership at all levels.',
+                        meta: '6 days • In-person • C-Suite',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+                    }
+                ]
+            },
+            research: {
+                postType: 'Research Center',
+                metadata: {
+                    'center_name': 'Global Center for Digital Business Transformation',
+                    'center_description': 'Pioneering research on digital disruption and organizational adaptation...',
+                    'center_focus': 'Digital Strategy, AI & Analytics',
+                    'center_director': 'Prof. Michael Wade',
+                    'primary_cta': 'Explore our research'
+                },
+                componentMapping: {
+                    slot1: '{center_name}',
+                    slot2: '{center_description}',
+                    slot3: 'Led by {center_director}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'Global Center for Digital Business Transformation',
+                        description: 'Pioneering research on digital disruption and organizational adaptation. Helping executives navigate complex challenges of digital transformation.',
+                        meta: 'Led by Prof. Michael Wade',
+                        cta: 'Explore our research',
+                        gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+                    },
+                    {
+                        title: 'Center for Future Readiness',
+                        description: 'Research focused on preparing organizations for emerging challenges: climate change, geopolitical shifts, and technological disruption.',
+                        meta: 'Led by Prof. Maria Santos',
+                        cta: 'Explore our research',
+                        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                    },
+                    {
+                        title: 'Innovation & Entrepreneurship Lab',
+                        description: 'Studying how established companies can maintain innovative cultures while scaling. Focus on corporate venturing and intrapreneurship.',
+                        meta: 'Led by Dr. James Lee',
+                        cta: 'Explore our research',
+                        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    }
+                ]
+            },
+            event: {
+                postType: 'Event',
+                metadata: {
+                    'event_name': 'AI & Strategy Summit 2026',
+                    'event_date': '2026-05-15',
+                    'event_location': 'IMD Lausanne Campus',
+                    'event_description': 'Join leading executives and AI experts to explore strategic applications...',
+                    'event_speakers': 'Prof. Sarah Chen, Dr. Michael Wade',
+                    'primary_cta': 'Register now'
+                },
+                componentMapping: {
+                    slot1: '{event_name}',
+                    slot2: '{event_description}',
+                    slot3: '{event_date} • {event_location}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'AI & Strategy Summit 2026',
+                        description: 'Join leading executives and AI experts to explore strategic applications of artificial intelligence in business transformation.',
+                        meta: 'May 15, 2026 • IMD Lausanne Campus',
+                        cta: 'Register now',
+                        gradient: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)'
+                    },
+                    {
+                        title: 'Digital Leadership Forum',
+                        description: 'Annual gathering of digital transformation leaders sharing insights on emerging technologies, organizational change, and future trends.',
+                        meta: 'June 8-9, 2026 • Hybrid Format',
+                        cta: 'Register now',
+                        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    },
+                    {
+                        title: 'Sustainability in Action',
+                        description: 'Learn practical frameworks for embedding sustainability into business strategy. Case studies from leading companies achieving net-zero goals.',
+                        meta: 'September 22, 2026 • Virtual',
+                        cta: 'Register now',
+                        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                    }
+                ]
+            },
+            organization: {
+                postType: 'Organization / Company',
+                metadata: {
+                    'org_name': 'Nestlé S.A.',
+                    'org_description': 'Global leader in nutrition, health and wellness...',
+                    'org_industry': 'Food & Beverage',
+                    'partnership_type': 'Corporate Partner',
+                    'primary_cta': 'View partnership'
+                },
+                componentMapping: {
+                    slot1: '{org_name}',
+                    slot2: '{org_description}',
+                    slot3: '{org_industry} • {partnership_type}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'Nestlé S.A.',
+                        description: 'Global leader in nutrition, health and wellness with brands across 190 countries. Pioneering sustainable food systems and digital transformation.',
+                        meta: 'Food & Beverage • Corporate Partner',
+                        cta: 'View partnership',
+                        gradient: 'linear-gradient(135deg, #434343 0%, #000000 100%)'
+                    },
+                    {
+                        title: 'Credit Suisse',
+                        description: 'Leading financial services company providing wealth management, investment banking, and asset management to clients worldwide.',
+                        meta: 'Financial Services • Corporate Partner',
+                        cta: 'View partnership',
+                        gradient: 'linear-gradient(135deg, #0f2027 0%, #2c5364 100%)'
+                    },
+                    {
+                        title: 'Roche',
+                        description: 'Global pioneer in pharmaceuticals and diagnostics, focused on advancing science to improve people\'s lives through innovative healthcare solutions.',
+                        meta: 'Pharmaceuticals • Corporate Partner',
+                        cta: 'View partnership',
+                        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    },
+                    {
+                        title: 'ABB',
+                        description: 'Technology leader in electrification and automation, enabling a more sustainable and resource-efficient future for industries and utilities.',
+                        meta: 'Engineering & Technology • Corporate Partner',
+                        cta: 'View partnership',
+                        gradient: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)'
+                    }
+                ]
+            },
+            book: {
+                postType: 'Book',
+                metadata: {
+                    'book_title': 'Orchestrating Transformation',
+                    'book_author': 'Prof. Michael Wade, Dr. Sarah Chen',
+                    'book_description': 'A practical framework for leading successful digital transformation...',
+                    'publication_date': '2025-09-15',
+                    'publisher': 'IMD Publishing',
+                    'primary_cta': 'Order now'
+                },
+                componentMapping: {
+                    slot1: '{book_title}',
+                    slot2: '{book_description}',
+                    slot3: 'by {book_author}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'Orchestrating Transformation',
+                        description: 'A practical framework for leading successful digital transformation initiatives. Based on research with 1,000+ executives across global industries.',
+                        meta: 'by Prof. Michael Wade, Dr. Sarah Chen',
+                        cta: 'Order now',
+                        gradient: 'linear-gradient(135deg, #0f2027 0%, #2c5364 100%)'
+                    },
+                    {
+                        title: 'The Digital Vortex',
+                        description: 'Understanding how digital disruption is reshaping industries and what leaders must do to thrive in the new competitive landscape.',
+                        meta: 'by Prof. Michael Wade et al.',
+                        cta: 'Order now',
+                        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    },
+                    {
+                        title: 'Competing in the Age of AI',
+                        description: 'How artificial intelligence is transforming strategy, operations, and competitive dynamics across every industry.',
+                        meta: 'by Dr. Sarah Chen, Prof. James Lee',
+                        cta: 'Order now',
+                        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+                    }
+                ]
+            },
+            article: {
+                postType: 'Article',
+                metadata: {
+                    'article_title': 'The Future of Leadership in the Age of AI',
+                    'article_author': 'Prof. Sarah Chen',
+                    'article_excerpt': 'As artificial intelligence reshapes business landscapes...',
+                    'article_category': 'Digital Transformation',
+                    'reading_time': '8 min read',
+                    'primary_cta': 'Read article'
+                },
+                componentMapping: {
+                    slot1: '{article_title}',
+                    slot2: '{article_excerpt}',
+                    slot3: 'by {article_author} • {reading_time}',
+                    slot4: '{primary_cta}'
+                },
+                cards: [
+                    {
+                        title: 'The Future of Leadership in the Age of AI',
+                        description: 'As artificial intelligence reshapes business landscapes, leaders must evolve beyond traditional management paradigms. Five critical competencies for AI-augmented leadership.',
+                        meta: 'by Prof. Sarah Chen • 8 min read',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    },
+                    {
+                        title: 'Why Digital Transformations Fail',
+                        description: 'After studying 300+ digital transformation initiatives, we identified five common failure patterns—and how to avoid them in your organization.',
+                        meta: 'by Prof. Michael Wade • 12 min read',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)'
+                    },
+                    {
+                        title: 'Building Sustainable Competitive Advantage',
+                        description: 'In rapidly changing markets, traditional moats are eroding. Here\'s how leading companies are creating new sources of sustainable advantage.',
+                        meta: 'by Dr. James Lee • 10 min read',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+                    },
+                    {
+                        title: 'The ESG Imperative for Boards',
+                        description: 'Environmental, social, and governance factors are no longer optional. Board members must understand how to integrate ESG into strategy.',
+                        meta: 'by Prof. Maria Santos • 6 min read',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    }
+                ]
+            }
+        };
+        
+        function renderContentType(type) {
+            const data = contentTypes[type];
+            
+            // Render Post Type
+            const postTypeHTML = `
+                <div class="post-type">
+                    <div class="post-type-name">${data.postType}</div>
+                    ${Object.entries(data.metadata).map(([key, value]) => `
+                        <div class="metadata-field">
+                            <div class="field-name">${key}</div>
+                            <div class="field-value">
+                                ${value.length > 60 ? value.substring(0, 60) + '...' : value}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('post-type-container').innerHTML = postTypeHTML;
+            
+            // Render Component Slots
+            document.getElementById('slot-1').textContent = data.componentMapping.slot1;
+            document.getElementById('slot-2').textContent = data.componentMapping.slot2;
+            document.getElementById('slot-3').textContent = data.componentMapping.slot3;
+            document.getElementById('slot-4').textContent = data.componentMapping.slot4;
+            
+            // Render Cards
+            const cardsHTML = data.cards.map(card => `
+                <div class="card">
+                    <div class="card-image" style="background: ${card.gradient};"></div>
+                    <div class="card-content">
+                        <h3 class="card-title">${card.title}</h3>
+                        <p class="card-description">${card.description}</p>
+                        <div class="card-footer">
+                            <a href="#" class="card-cta">${card.cta}</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('cards-container').innerHTML = cardsHTML;
+        }
+        
+        // Button handlers
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderContentType(btn.dataset.type);
+            });
+        });
+        
+        // Initial render
+        renderContentType('testimonial');
+    </script>
+</body>
+</html>
