@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMD Content Schema — Complete CPT Architecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0d14;
+            --surface: #161b22;
+            --surface-2: #1f2937;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #7d8590;
+            --text-dim: #484f58;
+            --accent: #3b82f6;
+            
+            --existing: #10b981;
+            --new: #3b82f6;
+            --universal: #f59e0b;
+            
+            --product: #8b5cf6;
+            --people: #3b82f6;
+            --faq: #84cc16;
+            --article: #10b981;
+            --testimonial: #ec4899;
+            --event: #ef4444;
+            --center: #06b6d4;
+            --organization: #f59e0b;
+            --book: #f97316;
+            --snippet: #a78bfa;
+            --cta: #14b8a6;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 13, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 28px 48px;
+        }
+        
+        .header-content {
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .header-left h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            color: white;
+            margin-bottom: 6px;
+        }
+        
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 32px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stat-item {
+            text-align: right;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .progress-bar {
+            width: 100px;
+            height: 4px;
+            background: var(--surface-2);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .controls-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.08);
+            transform: translateY(-1px);
+        }
+        
+        .filter-btn.active {
+            border-color: var(--accent);
+            color: white;
+            background: var(--accent);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .filter-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-left: auto;
+        }
+        
+        .search-input {
+            padding: 10px 18px 10px 42px;
+            border-radius: 8px;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            width: 320px;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: var(--surface-2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            font-size: 18px;
+        }
+        
+        .canvas {
+            position: relative;
+            z-index: 5;
+            padding: 48px;
+            max-width: 2000px;
+            margin: 0 auto;
+        }
+        
+        .schema-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 28px;
+        }
+        
+        @media (max-width: 1400px) {
+            .schema-grid { grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+        }
+        
+        @media (max-width: 900px) {
+            .schema-grid { grid-template-columns: 1fr; }
+            header { padding: 20px 28px; }
+            .canvas { padding: 28px; }
+            .stats { gap: 20px; }
+            .stat-value { font-size: 24px; }
+        }
+        
+        /* CPT Card */
+        .cpt-card {
+            background: var(--surface);
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .cpt-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--cpt-color);
+        }
+        
+        .cpt-card:hover {
+            border-color: var(--cpt-color);
+            box-shadow: 0 0 0 1px var(--cpt-color), 0 20px 40px rgba(0,0,0,0.4);
+            transform: translateY(-4px);
+        }
+        
+        .cpt-header {
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+        }
+        
+        .cpt-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+            letter-spacing: -0.4px;
+        }
+        
+        .cpt-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+        }
+        
+        .cpt-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        
+        .cpt-meta-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+        
+        .field-list {
+            max-height: 550px;
+            overflow-y: auto;
+            padding: 6px 0;
+        }
+        
+        .field-list::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .field-list::-webkit-scrollbar-track {
+            background: var(--surface);
+        }
+        
+        .field-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+        }
+        
+        .field-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-dim);
+        }
+        
+        .field-row {
+            display: flex;
+            align-items: center;
+            padding: 11px 28px;
+            gap: 14px;
+            transition: background 0.15s ease;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+        }
+        
+        .field-row:last-child {
+            border-bottom: none;
+        }
+        
+        .field-row:hover {
+            background: var(--surface-2);
+        }
+        
+        .field-row.is-universal {
+            background: rgba(245, 158, 11, 0.05);
+            border-left: 3px solid rgba(245, 158, 11, 0.4);
+        }
+        
+        .field-row.is-universal:hover {
+            background: rgba(245, 158, 11, 0.1);
+        }
+        
+        .field-row.hidden {
+            display: none;
+        }
+        
+        .field-name {
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text);
+            flex: 1;
+            min-width: 0;
+            font-weight: 500;
+        }
+        
+        .field-row.is-universal .field-name {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        
+        .field-row.is-universal .field-name::before {
+            content: '⬡ ';
+            opacity: 0.7;
+            margin-right: 4px;
+        }
+        
+        .field-required {
+            font-size: 11px;
+            color: #ef4444;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        
+        .field-badge {
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            border: 1px solid transparent;
+            letter-spacing: 0.3px;
+        }
+        
+        .badge-existing {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        
+        .badge-new {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        
+        .type-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+        }
+        
+        .type-text { background: #1e3a5f; color: #60a5fa; }
+        .type-textarea { background: #1a3a2e; color: #34d399; }
+        .type-taxonomy { background: #3d2014; color: #fb923c; }
+        .type-relationship { background: #2d1b4e; color: #a78bfa; }
+        .type-select { background: #3d2828; color: #f87171; }
+        .type-image, .type-media { background: #2d3a14; color: #a3e635; }
+        .type-date { background: #1a2d3d; color: #38bdf8; }
+        .type-wysiwyg, .type-wysiywg { background: #3d2d14; color: #fbbf24; }
+        .type-boolean { background: #2d1b3d; color: #c084fc; }
+        .type-number { background: #2d3a1a; color: #84cc16; }
+        .type-url { background: #1a2d2d; color: #5eead4; }
+        .type-file { background: #3a2d1a; color: #fbbf24; }
+        .type-repeater { background: #2d1a1a; color: #fb7185; }
+        .type-alphanumeric { background: #1e3a5f; color: #60a5fa; }
+        .type-calculated { background: #2d1b3d; color: #c084fc; }
+        .type-duration { background: #1a2d3d; color: #38bdf8; }
+        .type-user { background: #2d1b4e; color: #a78bfa; }
+        .type-icon { background: #3d2014; color: #fb923c; }
+        .type-address { background: #1a3a2e; color: #34d399; }
+        
+        .no-results {
+            text-align: center;
+            padding: 80px 40px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            padding: 24px 48px;
+            border-top: 1px solid var(--border);
+            background: rgba(10, 13, 20, 0.9);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            bottom: 0;
+            z-index: 50;
+        }
+        
+        .legend-section {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .insight-banner {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 24px 32px;
+            margin-bottom: 32px;
+        }
+        
+        .insight-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+        }
+        
+        .insight-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+        
+        .insight-stat {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-top">
+                <div class="header-left">
+                    <h1>IMD Content Schema</h1>
+                    <p class="subtitle">Complete Custom Post Type Architecture — v0.2</p>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value">11</div>
+                        <div class="stat-label">CPTs</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">475</div>
+                        <div class="stat-label">Total Fields</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">82%</div>
+                        <div class="stat-label">Net New</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 82%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">92</div>
+                        <div class="stat-label">Universal</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <span class="controls-label">Filter:</span>
+                <button class="filter-btn active" data-filter="all">
+                    All Fields
+                    <span class="filter-count">475</span>
+                </button>
+                <button class="filter-btn" data-filter="existing">
+                    Existing
+                    <span class="filter-count">84</span>
+                </button>
+                <button class="filter-btn" data-filter="new">
+                    New Only
+                    <span class="filter-count">391</span>
+                </button>
+                <button class="filter-btn" data-filter="universal">
+                    Universal
+                    <span class="filter-count">92</span>
+                </button>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="search" placeholder="Search fields...">
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="canvas">
+        <div class="insight-banner">
+            <div class="insight-title">🎯 Strategic Foundation for Personalization</div>
+            <div class="insight-text">
+                This schema defines <span class="insight-stat">92 universal taxonomy fields</span> that enable intelligent content filtering across all post types. 
+                The six core taxonomies — <strong>Category, Industry, Audience, Language, Location, Region</strong> — appear consistently across 
+                content CPTs, creating a <strong>queryable content library</strong> rather than hardcoded pages. This is the architectural prerequisite 
+                for personalization: without structured, shared taxonomies, tools like If-So and Qualified can only operate at surface level.
+            </div>
+        </div>
+        
+        <div class="schema-grid" id="schema-grid"></div>
+        <div class="no-results" id="no-results" style="display: none;">
+            No fields match your search or filter criteria
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-section">
+            <div class="legend-item"><span class="field-badge badge-existing">Existing</span> Already in WordPress</div>
+            <div class="legend-item"><span class="field-badge badge-new">New</span> Proposed new field</div>
+            <div class="legend-item"><div class="legend-dot" style="background: var(--universal)"></div> Universal taxonomy (shared across CPTs)</div>
+            <div class="legend-item"><span class="field-required">*</span> Required field</div>
+        </div>
+    </div>
+    
+    <script>
+        const cptData = {"product": {"display_name": "Product", "fields": [{"Field Name": "product_name", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "product_short_description", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "product_long_description", "Field Type": "WYSIWYG", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_tagline", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "product_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "product_sub-category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "product_has_certification", "Field Type": "Boolean", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_certification_type", "Field Type": "Select", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_target_audience", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_industry", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "product_promotional_title", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_promotional_description", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_name_with_link", "Field Type": "Calculated", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_sku", "Field Type": "Alphanumeric", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_status", "Field Type": "Select", "Required": "Yes", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_duration_days", "Field Type": "Number", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_format", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "product_languages", "Field Type": "Multi-select", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_default_location", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_prerequisites", "Field Type": "WYSIWYG", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_learning_outcomes", "Field Type": "Repeater (No Max)", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "algolia_sort_order", "Field Type": "Number", "Required": "No", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "algolia_keywords", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "product_is_featured", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "featured_product_start_date", "Field Type": "Date/Time", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "featured_product_end_date", "Field Type": "Date/Time", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "program_price", "Field Type": "Number", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_currency", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_price_includes", "Field Type": "WYSIWYG", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_location", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_price_excludes", "Field Type": "WYSIWYG", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "program_earlybird_price", "Field Type": "Number", "Required": "No", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_group_discount", "Field Type": "Boolean", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "program_session_dates", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_next_session_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_application_deadline", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "program_target_participants", "Field Type": "Number", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "program_current_participants", "Field Type": "Number", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_class_profile_image", "Field Type": "Image", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_class_profile_title", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_class_profile_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_class_profile_data_fields", "Field Type": "Repeater (Max 4)", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "data_label_1", "Field Type": "Text", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "data_value_1", "Field Type": "Text", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "data_type_1", "Field Type": "Select", "Required": "Bo", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "class_profile_cta_setting", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_ctas", "Field Type": "Relationship", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_cta_priority_order", "Field Type": "Number", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_sub_nav_enabled", "Field Type": "Boolean", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_sub_nav_items", "Field Type": "Repeater (No Max)", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "nav_label_1", "Field Type": "Text", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "nav_url_1", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "nav_order_1", "Field Type": "Number", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "nav_icon_1", "Field Type": "Icon", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_featured_image", "Field Type": "Image", "Required": "Yes", "Status": "New", "Universal": "yes", "Notes": null}, {"Field Name": "product_image_gallery", "Field Type": "Images", "Required": "No", "Status": "Existing", "Universal": "yes", "Notes": null}, {"Field Name": "product_video_urls", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_featured_video", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "product_brochure_pdf_link", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "no", "Notes": null}, {"Field Name": "product_class_profile_pdf_link", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "brochure_download_page_title", "Field Type": "Text", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "brochure_download_page_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "thank_you_page_title", "Field Type": "Text", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}, {"Field Name": "thank_you_page_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "Existing", "Universal": "no", "Notes": null}], "field_count": 64}, "people": {"display_name": "People", "fields": [{"Field Name": "person_full_name", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_preferred_name", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_title_position", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_company", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_primary_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_sub-category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_industry", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_audience", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_credentials", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_pronouns", "Field Type": "Select", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_gender", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_department", "Field Type": "Select", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_short_bio", "Field Type": "Text", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_long_bio", "Field Type": "WYSIYWG", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_pdf_bio", "Field Type": "File", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_primary_location", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_spoken_languages", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "person_education", "Field Type": "Repeater", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_email", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_email_is_public", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_phone", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_phone_is_public", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_book_call_link", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_book_call_is_public", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_direct_message_link", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_direct_message_link_is_public", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_linkedin_url", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_x_url", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_meta_url", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_website", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_researchgate_url", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_case_centre_url", "Field Type": "URL", "Required": "No", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "person_external_other_urls", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_headshot", "Field Type": "Media", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_large_image", "Field Type": "Media", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_videos", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_video_order", "Field Type": "Number", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_type", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_faculty", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_author", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_guest_speaker", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_sales", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_contributor", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_researcher", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_alumni", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_advisory_board", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_executive_in_residence", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_role_is_emeritus", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_is_active", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "person_is_featured", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_person_start_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_person_end_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faculty_teaching_areas", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faculty_research_interests", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faculty_join_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faculty_departure_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "author_external_publication_urls", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "year_of_graduation", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 60}, "faq": {"display_name": "Faq", "fields": [{"Field Name": "faq_question", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faq_full_answer", "Field Type": "WYSIWYG", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faq_short_answer", "Field Type": "WYSIWYG", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faq_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faq_sub_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faq_target_industry", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faq_target_audience", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faq_regions", "Field Type": "Taxonomy", "Required": "No", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "faq_priority_order", "Field Type": "Number", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faq_is_featured", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faq_featured_start_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "faq_featured_end_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "last_review_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "next_review_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 14}, "article": {"display_name": "Article", "fields": [{"Field Name": "article_title", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_subtitle", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_short_description", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_excerpt", "Field Type": "Text", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_tldr", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_type", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "article_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "Yes", "Notes": null}, {"Field Name": "article_sub_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "Yes", "Notes": null}, {"Field Name": "article_industries", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "Yes", "Notes": null}, {"Field Name": "article_audiences", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "Yes", "Notes": null}, {"Field Name": "article_regions", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "Yes", "Notes": null}, {"Field Name": "article_format", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_reading_time", "Field Type": "Duration", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_last_review_date", "Field Type": "Date", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_next_review_date", "Field Type": "Date", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_featured_image", "Field Type": "Media", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_video_url", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_podcast_file", "Field Type": "Media", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_podcast_link", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_pdf_version", "Field Type": "File", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_image_gallery", "Field Type": "Media", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_executive_summary", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_sections", "Field Type": "WYSIWYG", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_is_featured", "Field Type": "Boolean", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_article_priority", "Field Type": "Number", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_article_start_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_article_end_date", "Field Type": "Date", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_series", "Field Type": "Select", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "article_version", "Field Type": "Number", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_language", "Field Type": "Taxonomy", "Required": "Yes", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "article_translated_versions", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 33}, "testimonial": {"display_name": "Testimonial", "fields": [{"Field Name": "testimonial_name", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_item_reviewed", "Field Type": "Relationship", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_short", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_extra_short", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_long", "Field Type": "WYSIWYG", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_is_featured", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_testimonial_start_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_testimonial_end_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_context", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_topic", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "testimonial_location", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "testimonial_language", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "testimonial_sub-category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "testimonial_industries", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "testimonial_audiences", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "testimonial_type", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "c", "Notes": null}, {"Field Name": "testimonial_sentiment", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_logo", "Field Type": "Image", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_video_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_person_name", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_person_title", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_person_gender", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_person_type", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_person_organization", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_expiry_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_approved_by", "Field Type": "User", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_approved_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_published_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "testimonial_priority", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 31}, "event": {"display_name": "Event", "fields": [{"Field Name": "event_title", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "zoom_event_id", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_start_datetime", "Field Type": "Date/Time", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_end_datetime", "Field Type": "Date/Time", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_timezone", "Field Type": "Select", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_duration", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_type", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_status", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "is_external_registration", "Field Type": "Boolean", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "external_registration_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_max_capacity", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_display_title", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_short_description", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_long_description", "Field Type": "WYSIWYG", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_key_takeaways", "Field Type": "WYSIWYG", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "event_sub_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "event_industries", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "event_audiences", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "event_regions", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "event_featured_image", "Field Type": "Image", "Required": "N", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_agenda", "Field Type": "Repeater", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_agenda_time", "Field Type": "Date/Time", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_agenda_topic", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_agenda_speaker", "Field Type": "Person", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_materials_link", "Field Type": "File", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_series", "Field Type": "Event", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_series_order", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_languages", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_location_type", "Field Type": "Select", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_venue_name", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_venue_address", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_venue_city", "Field Type": "Text", "Required": "N", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_venue_country", "Field Type": "Taxonomy", "Required": "N", "Status": "Existing", "Universal": "Yes", "Notes": null}, {"Field Name": "event_venue_map_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_platform", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_is_featured", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_hide_after_ends", "Field Type": "Boolean", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_visibility", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_sponsor_name", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_sponsor_logo", "Field Type": "Image", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_sponsor_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "event_thank_you_title", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "event_thank_you_description", "Field Type": "WYSIWYG", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 46}, "center": {"display_name": "Center", "fields": [{"Field Name": "center_name", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "center_short_name", "Field Type": "Text", "Required": "N", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "center_acronym", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "center_slug", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "center_tagline", "Field Type": "Text", "Required": "Y", "Status": "Existing", "Universal": "No", "Notes": null}, {"Field Name": "center_short_description", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_long_description", "Field Type": "WYSIWYG", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_excerpt", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_type", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_status", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_founding_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_closure_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_sub-category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_industries", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_audiences", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_regions", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_language", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "center_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_funding_sources", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_accreditations", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_certifications", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_featured_image", "Field Type": "Media", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_logo", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_image_gallery", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_video_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_brochure_pdf_link", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_email", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_email_is_public", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_phone", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_phone_is_public", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_website", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_linkedin_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_x_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_researchgate_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_location", "Field Type": "Taxonomy", "Required": "N", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "algolia_sort_order", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "algolia_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_is_featured", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_featured_priority", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_center_start_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_center_end_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "center_visibility", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 45}, "organization": {"display_name": "Organization", "fields": [{"Field Name": "organization_name", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_short_name", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_acronym", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_slug", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_tagline", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_short_description", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_long_description", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_excerpt", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_type", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_status", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_founded_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_dissolved_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_sub-category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_language", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_industry", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_sub_industry", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_sector", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_size", "Field Type": "Select", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_revenue_range", "Field Type": "Select", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_audiences", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_regions", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_countries", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "organization_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_email", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_email_is_public", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_phone", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_phone_is_public", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_website", "Field Type": "URL", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_hq_address", "Field Type": "Address", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_hq_city", "Field Type": "Taxonomy", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_hq_country", "Field Type": "Taxonomy", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_hq_map_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_linkedin_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_x_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_meta_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_external_other_urls", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_is_partner", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_partnership_type", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_partnership_start_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_partnership_end_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_is_client", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_client_since", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_account_owner", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_crm_id", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_logo", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_featured_image", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_image_gallery", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_video_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "algolia_sort_order", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "algolia_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_is_featured", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_featured_priority", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_organization_start_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_organization_end_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "organization_visibility", "Field Type": "Select", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 58}, "book": {"display_name": "Book", "fields": [{"Field Name": "book_title", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_subtitle", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_slug", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_tagline", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_short_description", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_long_description", "Field Type": "WYSIWYG", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_excerpt", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_type", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_status", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_isbn", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_isbn_13", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_publisher", "Field Type": "Organization", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_publication_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_edition", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_version", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_language", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_translated_versions", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_page_count", "Field Type": "Number", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_format", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_sub_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_genres", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_industries", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_audiences", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_regions", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_topics", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_table_of_contents", "Field Type": "WYSIWYG", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_key_takeaways", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_learning_outcomes", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "book_executive_summary", "Field Type": "WYSIWYG", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_chapters", "Field Type": "WYSIWYG", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_reading_time", "Field Type": "Time", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_price", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_currency", "Field Type": "Select", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_purchase_url", "Field Type": "URL", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_amazon_url", "Field Type": "URL", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_external_other_urls", "Field Type": "URL", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_is_open_access", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_pdf_version", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_preview_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_cover_image", "Field Type": "Media", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_featured_image", "Field Type": "Media", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_image_gallery", "Field Type": "Media", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_video_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_brochure_pdf_link", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "algolia_sort_order", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "algolia_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_is_featured", "Field Type": "Boolean", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_featured_priority", "Field Type": "Number", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_book_start_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "featured_book_end_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "book_visibility", "Field Type": "Select", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 55}, "content snippet": {"display_name": "Content Snippet", "fields": [{"Field Name": "snippet_name", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_slug", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_type", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_status", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_version", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_language", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "snippet_title", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_subtitle", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_tagline", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_short_text", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_rich_text", "Field Type": "WYSIWYG", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_plain_text", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_excerpt", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_footnote", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_source", "Field Type": "Select", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_source_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_featured_image", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_image_gallery", "Field Type": "Media", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_icon", "Field Type": "Icon", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_video_url", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_pdf_link", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_file_link", "Field Type": "URL", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "snippet_sub_category", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "snippet_industries", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "snippet_audiences", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "snippet_regions", "Field Type": "Taxonomy", "Required": "Y", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "snippet_keywords", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_visibility", "Field Type": "Select", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_publish_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_expiry_date", "Field Type": "Date", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_is_active", "Field Type": "Boolean", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_created_by", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_created_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_last_modified_by", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_last_modified_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_approved_by", "Field Type": "Text", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_approved_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_review_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_next_review_date", "Field Type": "Date", "Required": "Y", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "snippet_notes", "Field Type": "Text", "Required": "N", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 43}, "call to action": {"display_name": "Call To Action", "fields": [{"Field Name": "name", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_type", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "cta_description", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_icon", "Field Type": "Icon", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_featured_image", "Field Type": "Media", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "button_style", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "button_text", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "button_text_mobile", "Field Type": "Text", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "form_id", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "modal_content_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "modal_content_description", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_url", "Field Type": "URL", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "associated_campaign_id", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_anchor", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_classes", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "status", "Field Type": "Select", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "last_modified", "Field Type": "Date", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "version", "Field Type": "Number", "Required": "Yes", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "cta_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "cta_sub_category", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "cta_target_industry", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "cta_target_audience", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "cta_regions", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "cta_language", "Field Type": "Taxonomy", "Required": "Yes", "Status": "New", "Universal": "Yes", "Notes": null}, {"Field Name": "promotinal_title", "Field Type": "Text", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}, {"Field Name": "promotional_description", "Field Type": "WYSIWYG", "Required": "No", "Status": "New", "Universal": "No", "Notes": null}], "field_count": 26}};
+        
+        const cptColors = {
+            'product': 'var(--product)',
+            'people': 'var(--people)',
+            'faq': 'var(--faq)',
+            'article': 'var(--article)',
+            'testimonial': 'var(--testimonial)',
+            'event': 'var(--event)',
+            'center': 'var(--center)',
+            'organization': 'var(--organization)',
+            'book': 'var(--book)',
+            'content snippet': 'var(--snippet)',
+            'call to action': 'var(--cta)'
+        };
+        
+        const taxonomyKeywords = ['category', 'sub_category', 'industry', 'industries', 'audience', 'audiences', 
+                                  'language', 'languages', 'location', 'region', 'regions'];
+        
+        function getTypeClass(fieldType) {
+            if (!fieldType) return 'type-text';
+            const type = fieldType.toLowerCase().replace(/[^a-z]/g, '');
+            if (type.includes('wysi')) return 'type-wysiwyg';
+            if (type === 'text') return 'type-text';
+            if (type.includes('textarea')) return 'type-textarea';
+            if (type.includes('taxonomy')) return 'type-taxonomy';
+            if (type.includes('relationship')) return 'type-relationship';
+            if (type.includes('select')) return 'type-select';
+            if (type.includes('multiselect')) return 'type-select';
+            if (type.includes('image') || type.includes('media') || type.includes('images')) return 'type-media';
+            if (type.includes('date') || type.includes('time')) return 'type-date';
+            if (type.includes('datetime')) return 'type-date';
+            if (type.includes('boolean')) return 'type-boolean';
+            if (type.includes('number')) return 'type-number';
+            if (type.includes('url')) return 'type-url';
+            if (type.includes('file')) return 'type-file';
+            if (type.includes('repeater')) return 'type-repeater';
+            if (type.includes('alphanumeric')) return 'type-alphanumeric';
+            if (type.includes('calculated')) return 'type-calculated';
+            if (type.includes('duration')) return 'type-duration';
+            if (type.includes('user')) return 'type-user';
+            if (type.includes('icon')) return 'type-icon';
+            if (type.includes('address')) return 'type-address';
+            return 'type-text';
+        }
+        
+        function isUniversalField(fieldName, universalValue) {
+            // Check if explicitly marked universal
+            if (['Yes', 'Y', 'yes', 'y'].includes(String(universalValue).trim())) {
+                return true;
+            }
+            // Also check if field name contains taxonomy keywords
+            const lowerName = fieldName.toLowerCase();
+            return taxonomyKeywords.some(keyword => lowerName.includes(keyword));
+        }
+        
+        function renderSchema() {
+            const grid = document.getElementById('schema-grid');
+            grid.innerHTML = '';
+            
+            Object.entries(cptData).forEach(([cptName, cptInfo]) => {
+                const card = document.createElement('div');
+                card.className = 'cpt-card';
+                card.style.setProperty('--cpt-color', cptColors[cptName.toLowerCase()] || 'var(--accent)');
+                
+                const existing = cptInfo.fields.filter(f => f.Status === 'Existing').length;
+                const newFields = cptInfo.fields.filter(f => f.Status === 'New').length;
+                const universal = cptInfo.fields.filter(f => isUniversalField(f['Field Name'], f.Universal)).length;
+                
+                const fieldsHTML = cptInfo.fields.map(field => {
+                    const isUniversal = isUniversalField(field['Field Name'], field.Universal);
+                    const isRequired = ['Yes', 'Y', 'yes', 'y'].includes(String(field.Required).trim());
+                    const status = field.Status || 'New';
+                    
+                    return `
+                        <div class="field-row ${isUniversal ? 'is-universal' : ''}" 
+                             data-status="${status.toLowerCase()}"
+                             data-universal="${isUniversal}"
+                             data-field-name="${field['Field Name'].toLowerCase()}">
+                            <span class="field-name">${field['Field Name']}</span>
+                            ${isRequired ? '<span class="field-required">*</span>' : ''}
+                            <span class="field-badge badge-${status.toLowerCase()}">${status}</span>
+                            <span class="type-badge ${getTypeClass(field['Field Type'])}">${field['Field Type'] || 'text'}</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                card.innerHTML = `
+                    <div class="cpt-header">
+                        <div class="cpt-title">${cptInfo.display_name}</div>
+                        <div class="cpt-meta">
+                            <div class="cpt-meta-item">
+                                <div class="cpt-meta-dot" style="background: var(--existing)"></div>
+                                ${existing} existing
+                            </div>
+                            <div class="cpt-meta-item">
+                                <div class="cpt-meta-dot" style="background: var(--new)"></div>
+                                ${newFields} new
+                            </div>
+                            ${universal > 0 ? `
+                            <div class="cpt-meta-item">
+                                <div class="cpt-meta-dot" style="background: var(--universal)"></div>
+                                ${universal} universal
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="field-list">
+                        ${fieldsHTML}
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        function applyFilters() {
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            
+            const allRows = document.querySelectorAll('.field-row');
+            let visibleCount = 0;
+            
+            allRows.forEach(row => {
+                let show = true;
+                
+                // Apply status filter
+                if (activeFilter === 'existing' && row.dataset.status !== 'existing') {
+                    show = false;
+                }
+                if (activeFilter === 'new' && row.dataset.status !== 'new') {
+                    show = false;
+                }
+                if (activeFilter === 'universal' && row.dataset.universal !== 'true') {
+                    show = false;
+                }
+                
+                // Apply search filter
+                if (searchTerm && !row.dataset.fieldName.includes(searchTerm)) {
+                    show = false;
+                }
+                
+                row.classList.toggle('hidden', !show);
+                if (show) visibleCount++;
+            });
+            
+            document.getElementById('no-results').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+        
+        // Event listeners
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                applyFilters();
+            });
+        });
+        
+        document.getElementById('search').addEventListener('input', applyFilters);
+        
+        // Initial render
+        renderSchema();
+        
+        // Animate progress bar on load
+        setTimeout(() => {
+            document.querySelector('.progress-fill').style.width = '82%';
+        }, 500);
+    </script>
+</body>
+</html>

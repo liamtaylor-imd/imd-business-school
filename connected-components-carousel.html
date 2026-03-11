@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Components - Rotating Hero Carousel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+            color: #1a1a1a;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+        
+        .content-type-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .type-btn {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .type-btn:hover {
+            border-color: #0066cc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .type-btn.active {
+            background: #0066cc;
+            color: white;
+            border-color: #0066cc;
+        }
+        
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 60px;
+        }
+        
+        @media (max-width: 1200px) {
+            .visualization {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            
+            .arrow {
+                display: none;
+            }
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .post-type {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        .post-type-name {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+        
+        .metadata-field {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        
+        .field-name {
+            font-family: 'Courier New', monospace;
+            background: #e8eef7;
+            color: #0066cc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 140px;
+            font-weight: 600;
+        }
+        
+        .field-value {
+            margin-left: 12px;
+            color: #555;
+            flex: 1;
+        }
+        
+        .arrow {
+            font-size: 40px;
+            color: #0066cc;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .component {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+        }
+        
+        .component-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .component-slot {
+            background: rgba(255,255,255,0.15);
+            border: 2px dashed rgba(255,255,255,0.4);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .slot-label {
+            opacity: 0.8;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        
+        /* Hero Carousel Styles */
+        .carousel-container {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .carousel-viewport {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+        }
+        
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding: 60px;
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .carousel-slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+        
+        .carousel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%);
+        }
+        
+        .carousel-content {
+            position: relative;
+            z-index: 2;
+            max-width: 700px;
+            color: white;
+        }
+        
+        .carousel-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+        
+        .carousel-title {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .carousel-description {
+            font-size: 20px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        
+        .carousel-cta {
+            display: inline-block;
+            background: #0066cc;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-cta:hover {
+            background: #0052a3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,102,204,0.4);
+        }
+        
+        /* Carousel Navigation */
+        .carousel-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 20px 60px;
+            z-index: 3;
+        }
+        
+        .carousel-indicators {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .carousel-indicator {
+            flex: 1;
+            max-width: 250px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 12px 20px;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .carousel-indicator:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .carousel-indicator.active {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.6);
+        }
+        
+        .carousel-controls {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .carousel-control {
+            pointer-events: all;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .carousel-control:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+        
+        .comparison-note {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .comparison-note strong {
+            color: #856404;
+            font-size: 18px;
+        }
+        
+        .comparison-note p {
+            margin-top: 10px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .key-insight {
+            background: #f0f7ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin-top: 40px;
+            border-radius: 8px;
+        }
+        
+        .key-insight h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        
+        .key-insight ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connected Components: Rotating Hero Carousel</h1>
+        <p class="subtitle">Same Metadata → Carousel Component → Homepage Feature Rotation</p>
+        
+        <div class="comparison-note">
+            <strong>🎯 Sixth Presentation Format</strong>
+            <p>Same exact metadata - now displayed as a rotating hero carousel like IMD's homepage. Each CPT becomes a featured slide.</p>
+        </div>
+        
+        <div class="content-type-selector">
+            <button class="type-btn active" data-type="article">Article</button>
+            <button class="type-btn" data-type="program">Program</button>
+            <button class="type-btn" data-type="event">Event</button>
+            <button class="type-btn" data-type="research">Research</button>
+            <button class="type-btn" data-type="testimonial">Testimonial</button>
+            <button class="type-btn" data-type="person">People</button>
+        </div>
+        
+        <div class="visualization">
+            <!-- Custom Post Type -->
+            <div class="section">
+                <div class="section-title">1. Custom Post Type + Metadata</div>
+                <div id="post-type-container"></div>
+            </div>
+            
+            <!-- Arrow -->
+            <div class="arrow">→</div>
+            
+            <!-- Universal Component -->
+            <div class="section">
+                <div class="section-title">2. Universal Component (Carousel)</div>
+                <div class="component">
+                    <div class="component-title">🎠 Carousel Hero Component</div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 1: Hero Headline</div>
+                        <div id="slot-1"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 2: Hero Description</div>
+                        <div id="slot-2"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 3: Badge / Category</div>
+                        <div id="slot-3"></div>
+                    </div>
+                    <div class="component-slot">
+                        <div class="slot-label">SLOT 4: CTA Button</div>
+                        <div id="slot-4"></div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.3); font-size: 12px; opacity: 0.9;">
+                        <strong>Auto-Rotation:</strong> Cycles through featured content every 5-7 seconds
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rendered Carousel -->
+        <div class="section" style="margin-top: 30px;">
+            <div class="section-title">3. Rendered Homepage Hero Carousel</div>
+            <div class="carousel-container">
+                <div class="carousel-viewport" id="carousel-viewport">
+                    <!-- Slides populated by JavaScript -->
+                </div>
+                
+                <div class="carousel-controls">
+                    <div class="carousel-control" id="prev-btn">‹</div>
+                    <div class="carousel-control" id="next-btn">›</div>
+                </div>
+                
+                <div class="carousel-nav">
+                    <div class="carousel-indicators" id="carousel-indicators">
+                        <!-- Indicators populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Key Insights -->
+        <div class="key-insight">
+            <h3>🎯 Six Component Formats, One Metadata Source</h3>
+            <ul>
+                <li><strong>Format 1 - Simple Card:</strong> Compact vertical cards for directories</li>
+                <li><strong>Format 2 - Hero Banner:</strong> Single full-width dramatic presentation</li>
+                <li><strong>Format 3 - Card Grid:</strong> Professional multi-card layouts</li>
+                <li><strong>Format 4 - 50/50 Split:</strong> Side-by-side feature blocks</li>
+                <li><strong>Format 5 - Flexible Gallery:</strong> Dynamic wrapping layout with variable sizes</li>
+                <li><strong>Format 6 - Rotating Carousel (This):</strong> Auto-rotating homepage hero like IMD.org</li>
+                <li><strong>Same Architecture:</strong> All six use identical CPT fields and universal slot pattern</li>
+                <li><strong>Content Curation:</strong> Marketing selects featured items, carousel displays automatically</li>
+                <li><strong>Auto-Rotation:</strong> Cycles through 3-5 featured pieces of content</li>
+                <li><strong>Mixed Content Types:</strong> Article → Program → Event → Report in one carousel</li>
+                <li><strong>Update Once:</strong> Change article headline → carousel updates automatically</li>
+                <li><strong>Perfect For:</strong> Homepage features, campaign highlights, announcement rotations</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        const contentTypes = {
+            article: {
+                postType: 'Article',
+                metadata: {
+                    'article_title': 'China\'s primacy challenge',
+                    'article_excerpt': 'Government security imperatives override business logic says Simon Evenett',
+                    'article_author': 'Prof. Simon Evenett',
+                    'article_category': 'Global Economics',
+                    'primary_cta': 'Read article'
+                },
+                componentMapping: {
+                    slot1: '{article_title}',
+                    slot2: '{article_excerpt}',
+                    slot3: '{article_category}',
+                    slot4: '{primary_cta}'
+                },
+                slides: [
+                    {
+                        badge: 'THOUGHT LEADERSHIP',
+                        title: 'China\'s primacy challenge',
+                        description: 'Government security imperatives override business logic says Simon Evenett',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, rgba(51,51,51,0.9) 0%, rgba(102,102,102,0.8) 100%)',
+                        navLabel: 'China article'
+                    },
+                    {
+                        badge: 'NEW RESEARCH',
+                        title: 'The Future of Leadership in the Age of AI',
+                        description: 'Five critical competencies that will define successful leadership in an AI-augmented world',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.8) 100%)',
+                        navLabel: 'AI Leadership'
+                    },
+                    {
+                        badge: 'DIGITAL TRANSFORMATION',
+                        title: 'Why Digital Transformations Fail',
+                        description: 'After studying 300+ initiatives, we identified five common failure patterns—and how to avoid them',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, rgba(231,76,60,0.9) 0%, rgba(192,57,43,0.8) 100%)',
+                        navLabel: 'Transformation Study'
+                    },
+                    {
+                        badge: 'SUSTAINABILITY',
+                        title: 'Building Sustainable Competitive Advantage',
+                        description: 'How leading companies are creating new sources of advantage in rapidly changing markets',
+                        cta: 'Read article',
+                        gradient: 'linear-gradient(135deg, rgba(67,233,123,0.9) 0%, rgba(56,249,215,0.8) 100%)',
+                        navLabel: 'Sustainability'
+                    }
+                ]
+            },
+            program: {
+                postType: 'Program',
+                metadata: {
+                    'program_name': 'Business Strategy Program',
+                    'program_short_desc': 'Develop winning strategies for competitive advantage',
+                    'program_duration': '6 days',
+                    'program_level': 'Senior Executive',
+                    'primary_cta': 'Download brochure'
+                },
+                componentMapping: {
+                    slot1: '{program_name}',
+                    slot2: '{program_short_desc}',
+                    slot3: 'Executive Program',
+                    slot4: '{primary_cta}'
+                },
+                slides: [
+                    {
+                        badge: 'EXECUTIVE PROGRAM',
+                        title: 'Business Strategy Program',
+                        description: 'Develop winning strategies for competitive advantage in dynamic markets. 6-day intensive for senior executives.',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, rgba(250,112,154,0.9) 0%, rgba(254,225,64,0.8) 100%)',
+                        navLabel: 'Business Strategy'
+                    },
+                    {
+                        badge: 'DEGREE PROGRAM',
+                        title: 'Executive MBA',
+                        description: 'Transform your leadership in 18 months. World-class education designed for experienced executives.',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.8) 100%)',
+                        navLabel: 'Executive MBA'
+                    },
+                    {
+                        badge: 'EXECUTIVE PROGRAM',
+                        title: 'Leading Digital Business Transformation',
+                        description: 'Master the strategies and frameworks to lead successful digital initiatives across your organization.',
+                        cta: 'Download brochure',
+                        gradient: 'linear-gradient(135deg, rgba(79,172,254,0.9) 0%, rgba(0,242,254,0.8) 100%)',
+                        navLabel: 'Digital Transformation'
+                    }
+                ]
+            },
+            event: {
+                postType: 'Event',
+                metadata: {
+                    'event_name': 'AI & Strategy Summit 2026',
+                    'event_date': '2026-05-15',
+                    'event_location': 'IMD Lausanne',
+                    'event_description': 'Join leading executives and AI experts',
+                    'primary_cta': 'Register now'
+                },
+                componentMapping: {
+                    slot1: '{event_name}',
+                    slot2: '{event_description}',
+                    slot3: 'Upcoming Event',
+                    slot4: '{primary_cta}'
+                },
+                slides: [
+                    {
+                        badge: 'UPCOMING EVENT',
+                        title: 'AI & Strategy Summit 2026',
+                        description: 'Join leading executives and AI experts to explore strategic applications of AI. May 15, 2026 at IMD Lausanne.',
+                        cta: 'Register now',
+                        gradient: 'linear-gradient(135deg, rgba(231,76,60,0.9) 0%, rgba(192,57,43,0.8) 100%)',
+                        navLabel: 'AI Summit'
+                    },
+                    {
+                        badge: 'ANNUAL CONFERENCE',
+                        title: 'Digital Leadership Forum',
+                        description: 'Network with 200+ transformation leaders. Share insights on emerging technologies and organizational change.',
+                        cta: 'Register now',
+                        gradient: 'linear-gradient(135deg, rgba(79,172,254,0.9) 0%, rgba(0,242,254,0.8) 100%)',
+                        navLabel: 'Leadership Forum'
+                    },
+                    {
+                        badge: 'WORKSHOP',
+                        title: 'Sustainability in Action',
+                        description: 'Learn practical frameworks for embedding sustainability into business strategy. September 22, 2026.',
+                        cta: 'Register now',
+                        gradient: 'linear-gradient(135deg, rgba(67,233,123,0.9) 0%, rgba(56,249,215,0.8) 100%)',
+                        navLabel: 'Sustainability Workshop'
+                    }
+                ]
+            },
+            research: {
+                postType: 'Research Center',
+                metadata: {
+                    'center_name': 'New IMD report',
+                    'center_description': 'Latest insights from our research centers',
+                    'primary_cta': 'Download report'
+                },
+                componentMapping: {
+                    slot1: '{center_name}',
+                    slot2: '{center_description}',
+                    slot3: 'Research',
+                    slot4: '{primary_cta}'
+                },
+                slides: [
+                    {
+                        badge: 'NEW REPORT',
+                        title: 'The State of Digital Transformation 2026',
+                        description: 'Latest insights from our Global Center for Digital Business Transformation. Based on 1,000+ executive interviews.',
+                        cta: 'Download report',
+                        gradient: 'linear-gradient(135deg, rgba(48,207,208,0.9) 0%, rgba(51,8,103,0.8) 100%)',
+                        navLabel: 'New IMD report'
+                    },
+                    {
+                        badge: 'RESEARCH INSIGHTS',
+                        title: 'Future Readiness Index 2026',
+                        description: 'Which organizations are prepared for emerging challenges? Our latest research reveals key patterns.',
+                        cta: 'Download report',
+                        gradient: 'linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.8) 100%)',
+                        navLabel: 'Readiness Index'
+                    }
+                ]
+            },
+            testimonial: {
+                postType: 'Testimonial',
+                metadata: {
+                    'testimonial_short': 'Tremendous program...',
+                    'person_name': 'Ronald Dump',
+                    'person_title': 'CEO',
+                    'person_company': 'Dump Global',
+                    'primary_cta': 'Read story'
+                },
+                componentMapping: {
+                    slot1: '{person_name}',
+                    slot2: '{testimonial_short}',
+                    slot3: 'Alumni Story',
+                    slot4: '{primary_cta}'
+                },
+                slides: [
+                    {
+                        badge: 'ALUMNI SUCCESS',
+                        title: '"The best investment in my career"',
+                        description: 'How IMD\'s Executive MBA transformed Sarah Chen from CFO to CEO. Her journey from finance leader to C-suite executive.',
+                        cta: 'Read her story',
+                        gradient: 'linear-gradient(135deg, rgba(240,147,251,0.9) 0%, rgba(245,87,108,0.8) 100%)',
+                        navLabel: 'Sarah\'s story'
+                    },
+                    {
+                        badge: 'IMPACT STORY',
+                        title: '"From participant to partner"',
+                        description: 'Michael\'s company became an IMD corporate partner after experiencing the transformative power of executive education.',
+                        cta: 'Read his story',
+                        gradient: 'linear-gradient(135deg, rgba(250,112,154,0.9) 0%, rgba(254,225,64,0.8) 100%)',
+                        navLabel: 'Michael\'s journey'
+                    }
+                ]
+            },
+            person: {
+                postType: 'Person',
+                metadata: {
+                    'person_name': 'I by IMD',
+                    'person_title': 'Digital learning platform',
+                    'primary_cta': 'Explore platform'
+                },
+                componentMapping: {
+                    slot1: '{person_name}',
+                    slot2: 'Learn from world-class faculty anywhere',
+                    slot3: 'Platform',
+                    slot4: '{primary_cta}'
+                },
+                slides: [
+                    {
+                        badge: 'DIGITAL LEARNING',
+                        title: 'I by IMD',
+                        description: 'Learn from world-class faculty anywhere, anytime. Access 100+ courses taught by IMD professors.',
+                        cta: 'Explore platform',
+                        gradient: 'linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.8) 100%)',
+                        navLabel: 'I by IMD'
+                    },
+                    {
+                        badge: 'FACULTY SPOTLIGHT',
+                        title: 'Meet Prof. Michael Wade',
+                        description: 'Leading the conversation on digital transformation. Director of our Global Center for Digital Business Transformation.',
+                        cta: 'Learn more',
+                        gradient: 'linear-gradient(135deg, rgba(48,207,208,0.9) 0%, rgba(51,8,103,0.8) 100%)',
+                        navLabel: 'Prof. Wade'
+                    }
+                ]
+            }
+        };
+        
+        let currentType = 'article';
+        let currentSlide = 0;
+        let autoplayInterval;
+        
+        function renderContentType(type) {
+            const data = contentTypes[type];
+            currentType = type;
+            currentSlide = 0;
+            
+            // Render Post Type
+            const postTypeHTML = `
+                <div class="post-type">
+                    <div class="post-type-name">${data.postType}</div>
+                    ${Object.entries(data.metadata).map(([key, value]) => `
+                        <div class="metadata-field">
+                            <div class="field-name">${key}</div>
+                            <div class="field-value">
+                                ${value.length > 60 ? value.substring(0, 60) + '...' : value}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('post-type-container').innerHTML = postTypeHTML;
+            
+            // Render Component Slots
+            document.getElementById('slot-1').textContent = data.componentMapping.slot1;
+            document.getElementById('slot-2').textContent = data.componentMapping.slot2;
+            document.getElementById('slot-3').textContent = data.componentMapping.slot3;
+            document.getElementById('slot-4').textContent = data.componentMapping.slot4;
+            
+            // Render Carousel
+            renderCarousel(data.slides);
+            startAutoplay();
+        }
+        
+        function renderCarousel(slides) {
+            // Render slides
+            const slidesHTML = slides.map((slide, index) => `
+                <div class="carousel-slide ${index === 0 ? 'active' : ''}" style="background: ${slide.gradient};">
+                    <div class="carousel-overlay"></div>
+                    <div class="carousel-content">
+                        <div class="carousel-badge">${slide.badge}</div>
+                        <h2 class="carousel-title">${slide.title}</h2>
+                        <p class="carousel-description">${slide.description}</p>
+                        <a href="#" class="carousel-cta">${slide.cta}</a>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('carousel-viewport').innerHTML = slidesHTML;
+            
+            // Render indicators
+            const indicatorsHTML = slides.map((slide, index) => `
+                <div class="carousel-indicator ${index === 0 ? 'active' : ''}" data-slide="${index}">
+                    ${slide.navLabel}
+                </div>
+            `).join('');
+            
+            document.getElementById('carousel-indicators').innerHTML = indicatorsHTML;
+            
+            // Add indicator click handlers
+            document.querySelectorAll('.carousel-indicator').forEach(indicator => {
+                indicator.addEventListener('click', () => {
+                    goToSlide(parseInt(indicator.dataset.slide));
+                });
+            });
+        }
+        
+        function goToSlide(index) {
+            const slides = contentTypes[currentType].slides;
+            currentSlide = index;
+            
+            // Update slides
+            document.querySelectorAll('.carousel-slide').forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            
+            // Update indicators
+            document.querySelectorAll('.carousel-indicator').forEach((indicator, i) => {
+                indicator.classList.toggle('active', i === index);
+            });
+            
+            resetAutoplay();
+        }
+        
+        function nextSlide() {
+            const slides = contentTypes[currentType].slides;
+            const next = (currentSlide + 1) % slides.length;
+            goToSlide(next);
+        }
+        
+        function prevSlide() {
+            const slides = contentTypes[currentType].slides;
+            const prev = (currentSlide - 1 + slides.length) % slides.length;
+            goToSlide(prev);
+        }
+        
+        function startAutoplay() {
+            stopAutoplay();
+            autoplayInterval = setInterval(nextSlide, 5000);
+        }
+        
+        function stopAutoplay() {
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+            }
+        }
+        
+        function resetAutoplay() {
+            startAutoplay();
+        }
+        
+        // Button handlers
+        document.querySelectorAll('.type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderContentType(btn.dataset.type);
+            });
+        });
+        
+        // Carousel controls
+        document.getElementById('prev-btn').addEventListener('click', prevSlide);
+        document.getElementById('next-btn').addEventListener('click', nextSlide);
+        
+        // Pause autoplay on hover
+        document.getElementById('carousel-viewport').addEventListener('mouseenter', stopAutoplay);
+        document.getElementById('carousel-viewport').addEventListener('mouseleave', startAutoplay);
+        
+        // Initial render
+        renderContentType('article');
+    </script>
+</body>
+</html>
