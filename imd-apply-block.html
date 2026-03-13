@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMD Apply Block — UX Proposal</title>
+  <style>
+    /* ─── Reset ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem; }
+
+    /* ─── Block wrapper ──────────────────────────────────── */
+    .imd-apply-block {
+      max-width: 480px;
+      width: 100%;
+      background: #0057B7;
+      border-radius: 20px;
+      padding: 32px 28px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    /* ─── Section label ──────────────────────────────────── */
+    .imd-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 14px;
+    }
+
+    /* ─── Date / intake options ──────────────────────────── */
+    .imd-date-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 13px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .imd-date-option:hover:not(.is-full) {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .imd-date-option.is-selected {
+      background: #fff;
+      border-color: #fff;
+    }
+    .imd-date-option.is-full {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    /* Radio indicator */
+    .imd-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .imd-date-option.is-selected .imd-radio {
+      border-color: #0057B7;
+    }
+    .imd-radio-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #0057B7;
+      display: none;
+    }
+    .imd-date-option.is-selected .imd-radio-dot {
+      display: block;
+    }
+
+    /* Date + cohort text */
+    .imd-date-info { flex: 1; }
+    .imd-date-text {
+      font-size: 15px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .imd-date-option.is-selected .imd-date-text { color: #0d2a5c; }
+
+    .imd-cohort {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 3px;
+    }
+    .imd-date-option.is-selected .imd-cohort { color: #4a6fa5; }
+
+    /* Badges */
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge--urgent  { background: #FAEEDA; color: #633806; }
+    .badge--early   { background: #EAF3DE; color: #27500A; }
+    .badge--full    { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); }
+
+    /* ─── Divider ─────────────────────────────────────────── */
+    .imd-divider {
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      margin: 20px 0;
+    }
+
+    /* ─── Meta grid (format / duration) ─────────────────── */
+    .imd-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .imd-meta-key {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 4px;
+    }
+    .imd-meta-val {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.5;
+    }
+
+    /* ─── Price block ────────────────────────────────────── */
+    .imd-price-block { margin-bottom: 20px; }
+
+    .imd-price-key {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 6px;
+    }
+    .imd-price-main {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .imd-price-val {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+    .imd-price-was {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: line-through;
+      align-self: center;
+      display: none;
+    }
+
+    /* Early bird offer badge */
+    .imd-earlybird {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: #EAF3DE;
+      color: #27500A;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+      width: fit-content;
+    }
+    .imd-earlybird.is-visible { display: inline-flex; }
+    .imd-earlybird-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3B6D11;
+      flex-shrink: 0;
+    }
+
+    /* ─── Apply CTA ──────────────────────────────────────── */
+    .imd-apply-btn {
+      display: block;
+      width: 100%;
+      background: #F26322;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .imd-apply-btn:hover { background: #d94f10; }
+
+    /* ─── Footnote ───────────────────────────────────────── */
+    .imd-footnote {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.38);
+      margin-top: 14px;
+      line-height: 1.7;
+      text-align: center;
+    }
+    .imd-footnote a {
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .imd-footnote a:hover { color: rgba(255, 255, 255, 0.9); }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       IMD Apply Block
+       
+       Data attributes on each .imd-date-option:
+         data-price    = full price (required)
+         data-was      = original price before discount (optional)
+         data-discount = early bird label text (optional)
+  ═══════════════════════════════════════════════════════ -->
+  <div class="imd-apply-block">
+
+    <div class="imd-label">Choose your intake</div>
+
+    <!-- Intake options -->
+    <div class="imd-date-option is-selected"
+         data-price="25500" data-was="" data-discount=""
+         onclick="selectIntake(this)">
+      <div class="imd-radio"><div class="imd-radio-dot"></div></div>
+      <div class="imd-date-info">
+        <div class="imd-date-text">9 Jun – 18 Jun 2026</div>
+        <div class="imd-cohort">📍 Lausanne cohort</div>
+      </div>
+      <span class="badge badge--urgent">Very limited</span>
+    </div>
+
+    <div class="imd-date-option"
+         data-price="25500" data-was="" data-discount=""
+         onclick="selectIntake(this)">
+      <div class="imd-radio"><div class="imd-radio-dot"></div></div>
+      <div class="imd-date-info">
+        <div class="imd-date-text">8 Sep – 17 Sep 2026</div>
+        <div class="imd-cohort">📍 Singapore cohort</div>
+      </div>
+    </div>
+
+    <div class="imd-date-option"
+         data-price="22950" data-was="25500" data-discount="Early bird — save 10%"
+         onclick="selectIntake(this)">
+      <div class="imd-radio"><div class="imd-radio-dot"></div></div>
+      <div class="imd-date-info">
+        <div class="imd-date-text">24 Nov – 3 Dec 2026</div>
+        <div class="imd-cohort">📍 Lausanne cohort</div>
+      </div>
+      <span class="badge badge--early">Early bird −10%</span>
+    </div>
+
+    <div class="imd-date-option"
+         data-price="25500" data-was="" data-discount=""
+         onclick="selectIntake(this)">
+      <div class="imd-radio"><div class="imd-radio-dot"></div></div>
+      <div class="imd-date-info">
+        <div class="imd-date-text">15 Feb – 25 Feb 2027</div>
+        <div class="imd-cohort">📍 Dubai cohort</div>
+      </div>
+    </div>
+
+    <div class="imd-date-option is-full">
+      <div class="imd-radio"></div>
+      <div class="imd-date-info">
+        <div class="imd-date-text">28 Mar – 6 Apr 2027</div>
+        <div class="imd-cohort">📍 Singapore cohort</div>
+      </div>
+      <span class="badge badge--full">Full</span>
+    </div>
+
+    <hr class="imd-divider">
+
+    <!-- Program meta -->
+    <div class="imd-meta-grid">
+      <div>
+        <div class="imd-meta-key">Format</div>
+        <div class="imd-meta-val">Blended</div>
+      </div>
+      <div>
+        <div class="imd-meta-key">Duration</div>
+        <div class="imd-meta-val">2 days virtual · 8 weeks online · 10 days on campus</div>
+      </div>
+    </div>
+
+    <!-- Dynamic price -->
+    <div class="imd-price-block">
+      <div class="imd-price-key">Price — incl. tuition &amp; materials</div>
+      <div class="imd-price-main">
+        <span class="imd-price-val" id="js-price">CHF 25,500</span>
+        <span class="imd-price-was" id="js-price-was"></span>
+      </div>
+      <div class="imd-earlybird" id="js-earlybird">
+        <div class="imd-earlybird-dot"></div>
+        <span id="js-earlybird-text"></span>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button class="imd-apply-btn">Apply →</button>
+
+    <p class="imd-footnote">
+      Fees quoted exclusive of VAT. IMD reserves the right to modify dates and fees.
+      <a href="#">View admission info &amp; terms →</a>
+    </p>
+
+  </div>
+
+  <script>
+    function fmtCHF(n) {
+      return 'CHF ' + Number(n).toLocaleString('de-CH');
+    }
+
+    function selectIntake(el) {
+      if (el.classList.contains('is-full')) return;
+
+      document.querySelectorAll('.imd-date-option').forEach(function(d) {
+        d.classList.remove('is-selected');
+      });
+      el.classList.add('is-selected');
+
+      var price    = el.dataset.price;
+      var was      = el.dataset.was;
+      var discount = el.dataset.discount;
+
+      // Update price
+      document.getElementById('js-price').textContent = fmtCHF(price);
+
+      // Strikethrough original price
+      var wasEl = document.getElementById('js-price-was');
+      if (was) {
+        wasEl.textContent = fmtCHF(was);
+        wasEl.style.display = 'inline';
+      } else {
+        wasEl.style.display = 'none';
+      }
+
+      // Early bird badge
+      var ebEl = document.getElementById('js-earlybird');
+      if (discount) {
+        document.getElementById('js-earlybird-text').textContent = discount;
+        ebEl.classList.add('is-visible');
+      } else {
+        ebEl.classList.remove('is-visible');
+      }
+    }
+  </script>
+
+</body>
+</html>
